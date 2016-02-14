@@ -64,6 +64,8 @@ func (s *jsonCoderGeneralTestSuite) TestInvalidMethod() {
 
 	NewServer().ServeHTTP(s.w, r)
 
+	s.Equal(http.StatusMethodNotAllowed, s.w.Code)
+	s.Equal("POST", s.w.Header().Get("Allow"))
 	want := `{"jsonrpc":"2.0","error":{"code":-32700,"message":"Parse error","data":"invalid HTTP method"},"id":null}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }

@@ -43,8 +43,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != "POST" {
-		e := coder.ParseError.WithString("invalid HTTP method")
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Header().Set("Allow", "POST")
+		e := coder.ParseError.WithString("invalid HTTP method")
 		c.WriteResponse(e.Response(nil))
 		return
 	}
