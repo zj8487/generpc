@@ -66,6 +66,8 @@ func (s *jsonCoderGeneralTestSuite) TestInvalidMethod() {
 
 	s.Equal(http.StatusMethodNotAllowed, s.w.Code)
 	s.Equal("POST", s.w.Header().Get("Allow"))
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := `{"jsonrpc":"2.0","error":{"code":-32700,"message":"Parse error","data":"invalid HTTP method"},"id":null}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
@@ -77,6 +79,8 @@ func (s *jsonCoderGeneralTestSuite) TestEmptyBody() {
 
 	NewServer().ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := `{"jsonrpc":"2.0","error":{"code":-32700,"message":"Parse error","data":"empty POST body"},"id":null}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
@@ -87,6 +91,8 @@ func (s *jsonCoderGeneralTestSuite) TestInvalidBody() {
 	s.Require().NoError(err)
 
 	NewServer().ServeHTTP(s.w, r)
+
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
 
 	want := `{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request","data":"invalid character 'i' looking for beginning of value"},"id":null}` + "\n"
 	s.Equal(want, s.w.Body.String())
@@ -100,6 +106,8 @@ func (s *jsonCoderGeneralTestSuite) TestInvalidJSON() {
 	s.Require().NoError(err)
 
 	NewServer().ServeHTTP(s.w, r)
+
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
 
 	want := `{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request","data":"invalid character 'p' after object key:value pair"},"id":null}` + "\n"
 	s.Equal(want, s.w.Body.String())
@@ -125,6 +133,8 @@ func (s *jsonCoderRequestTestSuite) TestInvalidVersion() {
 
 	NewServer().ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := `{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request","data":"invalid version"},"id":null}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
@@ -137,6 +147,8 @@ func (s *jsonCoderRequestTestSuite) TestInvalidID() {
 	s.Require().NoError(err)
 
 	NewServer().ServeHTTP(s.w, r)
+
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
 
 	want := `{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request","data":"invalid id type"},"id":null}` + "\n"
 	s.Equal(want, s.w.Body.String())
@@ -151,6 +163,8 @@ func (s *jsonCoderRequestTestSuite) TestInvalidRequest() {
 
 	NewServer().ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := `{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request","data":"json: cannot unmarshal number into Go value of type string"},"id":null}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
@@ -163,6 +177,8 @@ func (s *jsonCoderRequestTestSuite) TestIDString() {
 	s.Require().NoError(err)
 
 	NewServer().ServeHTTP(s.w, r)
+
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
 
 	want := `{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":"id"}` + "\n"
 	s.Equal(want, s.w.Body.String())
@@ -177,6 +193,8 @@ func (s *jsonCoderRequestTestSuite) TestIDInt() {
 
 	NewServer().ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := `{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":1}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
@@ -189,6 +207,8 @@ func (s *jsonCoderRequestTestSuite) TestIDFloat() {
 	s.Require().NoError(err)
 
 	NewServer().ServeHTTP(s.w, r)
+
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
 
 	want := `{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":1.0}` + "\n"
 	s.Equal(want, s.w.Body.String())
@@ -203,6 +223,8 @@ func (s *jsonCoderRequestTestSuite) TestIDNull() {
 
 	NewServer().ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := `{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":null}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
@@ -216,6 +238,8 @@ func (s *jsonCoderRequestTestSuite) TestInternalMethod() {
 
 	NewServer().ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := `{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":1}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
@@ -228,6 +252,8 @@ func (s *jsonCoderRequestTestSuite) TestUnregisteredMethod() {
 	s.Require().NoError(err)
 
 	NewServer().ServeHTTP(s.w, r)
+
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
 
 	want := `{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":1}` + "\n"
 	s.Equal(want, s.w.Body.String())
@@ -244,6 +270,8 @@ func (s *jsonCoderRequestTestSuite) TestNilMethod() {
 	h.Register("nil", (Method)(nil))
 	h.ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := `{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":1}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
@@ -258,6 +286,8 @@ func (s *jsonCoderRequestTestSuite) TestByPosParams() {
 	h := NewServer()
 	h.Register("subtract", subtractMethod{})
 	h.ServeHTTP(s.w, r)
+
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
 
 	want := `{"jsonrpc":"2.0","result":19,"id":1}` + "\n"
 	s.Equal(want, s.w.Body.String())
@@ -274,6 +304,8 @@ func (s *jsonCoderRequestTestSuite) TestByNameParams() {
 	h.Register("subtract", subtractMethod{})
 	h.ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := `{"jsonrpc":"2.0","result":19,"id":1}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
@@ -288,6 +320,8 @@ func (s *jsonCoderRequestTestSuite) TestByNameParams_error() {
 	h := NewServer()
 	h.Register("subtract", subtractMethod{})
 	h.ServeHTTP(s.w, r)
+
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
 
 	want := `{"jsonrpc":"2.0","error":{"code":-32602,"message":"Invalid params","data":"parameter minuend not provided"},"id":1}` + "\n"
 	s.Equal(want, s.w.Body.String())
@@ -304,6 +338,8 @@ func (s *jsonCoderRequestTestSuite) TestInvalidParams() {
 	h.Register("subtract", subtractMethod{})
 	h.ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := `{"jsonrpc":"2.0","error":{"code":-32602,"message":"Invalid params","data":"params should be by-position (array) or by-name (object)"},"id":1}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
@@ -319,6 +355,8 @@ func (s *jsonCoderRequestTestSuite) TestNotification() {
 	h.Register("subtract", subtractMethod{})
 	h.ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	s.Empty(s.w.Body.String())
 }
 
@@ -332,6 +370,8 @@ func (s *jsonCoderRequestTestSuite) TestErrorMethod() {
 	h := NewServer()
 	h.Register("error", errorMethod{})
 	h.ServeHTTP(s.w, r)
+
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
 
 	want := `{"jsonrpc":"2.0","error":{"code":1,"message":"Test error"},"id":1}` + "\n"
 	s.Equal(want, s.w.Body.String())
@@ -362,6 +402,8 @@ func (s *jsonCoderBatchTestSuite) TestParseError() {
 
 	NewServer().ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := `{"jsonrpc":"2.0","error":{"code":-32700,"message":"Parse error","data":"invalid character ']' after object key"},"id":null}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
@@ -372,6 +414,8 @@ func (s *jsonCoderBatchTestSuite) TestEmptyRequest() {
 	s.Require().NoError(err)
 
 	NewServer().ServeHTTP(s.w, r)
+
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
 
 	want := `{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request"},"id":null}` + "\n"
 	s.Equal(want, s.w.Body.String())
@@ -384,6 +428,8 @@ func (s *jsonCoderBatchTestSuite) TestInvalidRequest() {
 
 	NewServer().ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := `[{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request"},"id":null}]` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
@@ -394,6 +440,8 @@ func (s *jsonCoderBatchTestSuite) TestInvalidBatch() {
 	s.Require().NoError(err)
 
 	NewServer().ServeHTTP(s.w, r)
+
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
 
 	want := new(bytes.Buffer)
 	err = json.Compact(want, []byte(`[
@@ -421,6 +469,8 @@ func (s *jsonCoderBatchTestSuite) TestInvalidJSON() {
 
 	NewServer().ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := `{"jsonrpc":"2.0","error":{"code":-32700,"message":"Parse error","data":"invalid character ']' after object key"},"id":null}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
@@ -441,6 +491,8 @@ func (s *jsonCoderBatchTestSuite) TestRequests() {
 	h.Register("subtract", subtractMethod{})
 	h.ServeHTTP(s.w, r)
 
+	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+
 	want := new(bytes.Buffer)
 	err = json.Compact(want, []byte(`[
 		{"jsonrpc":"2.0","result":19,"id":1},
@@ -459,15 +511,23 @@ func Test_jsonCoderBatchTestSuite(t *testing.T) {
 	suite.Run(t, new(jsonCoderBatchTestSuite))
 }
 
+func Test_jsonCoder_WriteContentType(t *testing.T) {
+	r := httptest.NewRecorder()
+	c := &jsonCoder{ResponseWriter: r}
+
+	c.WriteContentType()
+	assert.Equal(t, "application/json; charset=utf-8", r.Header().Get("Content-Type"))
+}
+
 func Test_jsonCoder_WriteException(t *testing.T) {
-	buf := new(bytes.Buffer)
-	c := &jsonCoder{Writer: buf}
+	r := httptest.NewRecorder()
+	c := &jsonCoder{ResponseWriter: r}
 
 	err := c.WriteException(nil, errors.New("error"))
 	assert.NoError(t, err)
 
 	want := `{"jsonrpc":"2.0","error":{"code":-32090,"message":"Server error","data":"error"},"id":null}` + "\n"
-	assert.Equal(t, want, buf.String())
+	assert.Equal(t, want, r.Body.String())
 }
 
 func Test_jsonNumber_CastFloat64(t *testing.T) {

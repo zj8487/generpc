@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
 
 	"github.com/dwlnetnl/generpc/coder"
@@ -15,7 +14,7 @@ func init() {
 }
 
 type jsonCoder struct {
-	io.Writer
+	http.ResponseWriter
 	*bufio.Reader
 }
 
@@ -96,6 +95,10 @@ func (c *jsonCoder) jsonReadBatch() (reqs []*coder.Request, e *coder.Error) {
 	}
 
 	return reqs, nil
+}
+
+func (c *jsonCoder) WriteContentType() {
+	c.Header().Set("Content-Type", "application/json; charset=utf-8")
 }
 
 func (c *jsonCoder) WriteResponse(r *coder.Response) error {

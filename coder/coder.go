@@ -9,12 +9,17 @@ import (
 
 // A Coder decodes and encodes RPC message data.
 type Coder interface {
-	io.ReadWriter
+	io.Reader
+	http.ResponseWriter
 
 	// ReadRequests should decode the request(s) into a slice and indicates if
 	// the input is a batch or return an error. The returned slice may contain
 	// nil values, this indicates that the request data was malformed.
 	ReadRequests() (s []*Request, batch bool, e *Error)
+
+	// WriteContentType is called at the start of a response. The coder should
+	// write the correct Content-Type header to match the body content.
+	WriteContentType()
 
 	// WriteResponse is called when a single response should be encoded and
 	// written to the client.
