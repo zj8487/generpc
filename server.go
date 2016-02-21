@@ -9,29 +9,45 @@ import (
 )
 
 // Method represents a RPC method.
-type Method interface {
-	// ParseNamedParams should convert the provided by-name parameters into their
-	// by-position representation. If the input cannot be converted, an error
-	// should returned explaining why the conversion failed.
-	ParseNamedParams(map[string]interface{}) ([]interface{}, error)
-
-	// Invoke should execute the called method and return the result. This may be
-	// an Error. The passed parameters are in by-position representation.
-	Invoke(params []interface{}) interface{}
+//
+// ParamNames contains a slice of parameter names so provided by-name
+// parameters can be converted into their by-position representation.
+//
+// Func is the actual function to be called. It gets the parameters passed via
+// the slice and should return the result. This may be a coder.Error. The
+// passed parameters are in by-position representation.
+type Method struct {
+	ParamNames []string
+	Func       func([]interface{}) interface{}
 }
 
 // Server implements a RPC HTTP handler.
 type Server struct {
-	m map[string]Method
+	m map[string]*Method
 }
 
 // NewServer returns an initialized handler.
-func NewServer() *Server { return &Server{m: make(map[string]Method)} }
+func NewServer() *Server { return &Server{m: make(map[string]*Method)} }
 
-// Register registers a RPC method for the given name. It's considered a
-// programmer error to register a method after the HTTP server is serving
-// requests.
-func (s *Server) Register(name string, m Method) { s.m[name] = m }
+// Register registers a RPC method for the given name. It panics if name is
+// empty or Method.Func is nil or if there is already a method for the name
+// registered. It's considered a programmer error to register a method after
+// the HTTP server is serving requests.
+func (s *Server) Register(name string, m Method) {
+	if name == "" {
+		panic("generpc: name is empty")
+	}
+
+	if m.Func == nil {
+		panic("generpc: Method.Func is nil")
+	}
+
+	if _, ok := s.m[name]; ok {
+		panic("generpc: method already exists: " + name)
+	}
+
+	s.m[name] = &m
+}
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c := coder.New(w, r)
@@ -132,10 +148,14 @@ func (s *Server) invokeRequest(req *coder.Request) *coder.Response {
 		params = v
 
 	case map[string]interface{}:
-		var err error
-		params, err = m.ParseNamedParams(v)
-		if err != nil {
-			return invalidParams.WithError(err).Response(req)
+		for _, name := range m.ParamNames {
+			p, ok := v[name]
+			if !ok {
+				info := fmt.Sprintf("Parameter %q not provided", name)
+				return invalidParams.WithString(info).Response(req)
+			}
+
+			params = append(params, p)
 		}
 
 	default:
@@ -143,7 +163,7 @@ func (s *Server) invokeRequest(req *coder.Request) *coder.Response {
 		return invalidParams.WithString(info).Response(req)
 	}
 
-	result := m.Invoke(params)
+	result := m.Func(params)
 
 	if *req.ID == nil {
 		// Request is a notification.

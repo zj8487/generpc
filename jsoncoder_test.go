@@ -15,37 +15,25 @@ import (
 	"github.com/dwlnetnl/generpc/coder"
 )
 
-type subtractMethod struct{}
-
-func (m subtractMethod) ParseNamedParams(p map[string]interface{}) ([]interface{}, error) {
-	minuend, ok := p["minuend"]
-	if !ok {
-		return nil, errors.New("parameter minuend not provided")
+func subtractMethod() Method {
+	return Method{
+		[]string{"minuend", "subtrahend"},
+		func(params []interface{}) interface{} {
+			// This implementation is unsafe because it doesn't validate the input types.
+			p0, _ := params[0].(coder.Number).CastInt()
+			p1, _ := params[1].(coder.Number).CastInt()
+			return p0 - p1
+		},
 	}
+}
 
-	subtrahend, ok := p["subtrahend"]
-	if !ok {
-		return nil, errors.New("parameter minuend not provided")
+func errorMethod() Method {
+	return Method{
+		[]string{},
+		func(params []interface{}) interface{} {
+			return coder.Error{Code: 1, Message: "Test error"}
+		},
 	}
-
-	return []interface{}{minuend, subtrahend}, nil
-}
-
-func (m subtractMethod) Invoke(params []interface{}) interface{} {
-	// This implementation is unsafe because it doesn't validate the input types.
-	p0, _ := params[0].(coder.Number).CastInt()
-	p1, _ := params[1].(coder.Number).CastInt()
-	return p0 - p1
-}
-
-type errorMethod struct{}
-
-func (m errorMethod) ParseNamedParams(p map[string]interface{}) ([]interface{}, error) {
-	return []interface{}{}, nil
-}
-
-func (m errorMethod) Invoke(params []interface{}) interface{} {
-	return coder.Error{Code: 1, Message: "Test error"}
 }
 
 type jsonCoderGeneralTestSuite struct {
@@ -259,21 +247,26 @@ func (s *jsonCoderRequestTestSuite) TestUnregisteredMethod() {
 	s.Equal(want, s.w.Body.String())
 }
 
-func (s *jsonCoderRequestTestSuite) TestNilMethod() {
-	body := strings.NewReader(`{"jsonrpc":"2.0","method":"nil","id":1}`)
-
-	r, err := http.NewRequest("POST", "/", body)
-	r.Header.Add("Content-Type", "application/json")
-	s.Require().NoError(err)
-
+func (s *jsonCoderRequestTestSuite) TestNoNameMethod() {
 	h := NewServer()
-	h.Register("nil", (Method)(nil))
-	h.ServeHTTP(s.w, r)
+	s.Panics(func() {
+		h.Register("", errorMethod())
+	})
+}
 
-	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
+func (s *jsonCoderRequestTestSuite) TestZeroMethod() {
+	h := NewServer()
+	s.Panics(func() {
+		h.Register("zero", Method{})
+	})
+}
 
-	want := `{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":1}` + "\n"
-	s.Equal(want, s.w.Body.String())
+func (s *jsonCoderRequestTestSuite) TestExistingMethod() {
+	h := NewServer()
+	h.Register("subtract", subtractMethod())
+	s.Panics(func() {
+		h.Register("subtract", errorMethod())
+	})
 }
 
 func (s *jsonCoderRequestTestSuite) TestByPosParams() {
@@ -284,7 +277,7 @@ func (s *jsonCoderRequestTestSuite) TestByPosParams() {
 	s.Require().NoError(err)
 
 	h := NewServer()
-	h.Register("subtract", subtractMethod{})
+	h.Register("subtract", subtractMethod())
 	h.ServeHTTP(s.w, r)
 
 	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
@@ -301,7 +294,7 @@ func (s *jsonCoderRequestTestSuite) TestByNameParams() {
 	s.Require().NoError(err)
 
 	h := NewServer()
-	h.Register("subtract", subtractMethod{})
+	h.Register("subtract", subtractMethod())
 	h.ServeHTTP(s.w, r)
 
 	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
@@ -318,12 +311,12 @@ func (s *jsonCoderRequestTestSuite) TestByNameParams_error() {
 	s.Require().NoError(err)
 
 	h := NewServer()
-	h.Register("subtract", subtractMethod{})
+	h.Register("subtract", subtractMethod())
 	h.ServeHTTP(s.w, r)
 
 	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
 
-	want := `{"jsonrpc":"2.0","error":{"code":-32602,"message":"Invalid params","data":"parameter minuend not provided"},"id":1}` + "\n"
+	want := `{"jsonrpc":"2.0","error":{"code":-32602,"message":"Invalid params","data":"Parameter \"minuend\" not provided"},"id":1}` + "\n"
 	s.Equal(want, s.w.Body.String())
 }
 
@@ -335,7 +328,7 @@ func (s *jsonCoderRequestTestSuite) TestInvalidParams() {
 	s.Require().NoError(err)
 
 	h := NewServer()
-	h.Register("subtract", subtractMethod{})
+	h.Register("subtract", subtractMethod())
 	h.ServeHTTP(s.w, r)
 
 	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
@@ -352,7 +345,7 @@ func (s *jsonCoderRequestTestSuite) TestNotification() {
 	s.Require().NoError(err)
 
 	h := NewServer()
-	h.Register("subtract", subtractMethod{})
+	h.Register("subtract", subtractMethod())
 	h.ServeHTTP(s.w, r)
 
 	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
@@ -368,7 +361,7 @@ func (s *jsonCoderRequestTestSuite) TestErrorMethod() {
 	s.Require().NoError(err)
 
 	h := NewServer()
-	h.Register("error", errorMethod{})
+	h.Register("error", errorMethod())
 	h.ServeHTTP(s.w, r)
 
 	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
@@ -488,7 +481,7 @@ func (s *jsonCoderBatchTestSuite) TestRequests() {
 	s.Require().NoError(err)
 
 	h := NewServer()
-	h.Register("subtract", subtractMethod{})
+	h.Register("subtract", subtractMethod())
 	h.ServeHTTP(s.w, r)
 
 	s.Equal("application/json; charset=utf-8", s.w.Header().Get("Content-Type"))
