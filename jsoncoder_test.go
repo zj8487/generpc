@@ -19,7 +19,8 @@ func subtractMethod() Method {
 	return Method{
 		[]string{"minuend", "subtrahend"},
 		func(params []interface{}) interface{} {
-			// This implementation is unsafe because it doesn't validate the input types.
+			// This implementation is unsafe because it doesn't validate the input
+			// types. It could panic if params don't has 2 values or aren't numbers.
 			p0, _ := params[0].(coder.Number).CastInt()
 			p1, _ := params[1].(coder.Number).CastInt()
 			return p0 - p1
