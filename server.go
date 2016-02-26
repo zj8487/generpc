@@ -13,9 +13,9 @@ import (
 // ParamNames contains a slice of parameter names so provided by-name
 // parameters can be converted into their by-position representation.
 //
-// Func is the actual function to be called. It gets the parameters passed via
-// the slice and should return the result. This may be a coder.Error. The
-// passed parameters are in by-position representation.
+// Func is the actual function that is called by the Server. It gets the
+// parameters passed via the slice and should return the result. This may be a
+// coder.Error. The passed parameters are in by-position representation.
 type Method struct {
 	ParamNames []string
 	Func       func([]interface{}) interface{}
